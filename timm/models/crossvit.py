@@ -288,7 +288,7 @@ def scale_image(x, ss: Tuple[int, int], crop_scale: bool = False):  # annotation
             cu, cl = int(round((H - ss[0]) / 2.)), int(round((W - ss[1]) / 2.))
             x = x[:, :, cu:cu + ss[0], cl:cl + ss[1]]
         else:
-            x = torch.nn.functional.interpolate(x, size=ss, mode='nearest', align_corners=False)
+            x = torch.nn.functional.interpolate(x, size=ss, mode='nearest', align_corners=None)
     return x
 
 
