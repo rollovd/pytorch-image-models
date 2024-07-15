@@ -123,17 +123,17 @@ class MobileNetV3(nn.Module):
         # Head + Pooling
         self.global_pool = SelectAdaptivePool2d(pool_type=global_pool)
         num_pooled_chs = self.num_features * self.global_pool.feat_mult()
-        head_norm = True
+        # head_norm = True
         if head_norm:
             # mobilenet-v4 post-pooling PW conv is followed by a norm+act layer
             self.conv_head = create_conv2d(num_pooled_chs, self.head_hidden_size, 1, padding=pad_type)  # never bias
             self.norm_head = norm_act_layer(self.head_hidden_size)
             self.act2 = nn.Identity()
-        # else:
-        #     # mobilenet-v3 and others only have an activation after final PW conv
-        #     self.conv_head = create_conv2d(num_pooled_chs, self.head_hidden_size, 1, padding=pad_type, bias=head_bias)
-        #     self.norm_head = nn.Identity()
-        #     self.act2 = act_layer(inplace=True)
+        else:
+            # mobilenet-v3 and others only have an activation after final PW conv
+            self.conv_head = create_conv2d(num_pooled_chs, self.head_hidden_size, 1, padding=pad_type, bias=head_bias)
+            self.norm_head = nn.Identity()
+            self.act2 = act_layer(inplace=True)
         self.flatten = nn.Flatten(1) if global_pool else nn.Identity()  # don't flatten if pooling disabled
         self.classifier = Linear(self.head_hidden_size, num_classes) if num_classes > 0 else nn.Identity()
 
