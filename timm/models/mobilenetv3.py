@@ -260,6 +260,7 @@ class MobileNetV3(nn.Module):
     def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
         x = self.global_pool(x)
         x = self.conv_head(x)
+        print(x.shape)
         x = self.norm_head(x)
         x = self.act2(x)
         x = self.flatten(x)
