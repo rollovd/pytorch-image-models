@@ -448,19 +448,35 @@ class CrossVit(nn.Module):
             xs = blk(xs)
 
         # NOTE: was before branch token section, move to here to assure all branch token are before layer norm
-        xs = [norm(xs[i]) for i, norm in enumerate(self.norm)]
-        return xs
+        # xs = [norm(xs[i]) for i, norm in enumerate(self.norm)]
 
-    def forward_head(self, xs: List[torch.Tensor], pre_logits: bool = False) -> torch.Tensor:
-        xs = [x[:, 1:].mean(dim=1) for x in xs] if self.global_pool == 'avg' else [x[:, 0] for x in xs]
-        xs = [self.head_drop(x) for x in xs]
+        xs0 = self.norm[0](xs[0])
+        xs1 = self.norm[1](xs[1])
+
+        return xs0, xs1
+
+    def process_heads(self, xs0, xs1, pre_logits: bool = False):
+        if self.global_pool == 'avg':
+            xs0 = xs0[:, 1:].mean(dim=1)
+            xs1 = xs1[:, 1:].mean(dim=1)
+        else:
+            xs0 = xs0[:, 0]
+            xs1 = xs1[:, 0]
+
+        xs0 = self.head_drop(xs0)
+        xs1 = self.head_drop(xs1)
+
         if pre_logits or isinstance(self.head[0], nn.Identity):
-            return torch.cat([x for x in xs], dim=1)
-        return torch.mean(torch.stack([head(xs[i]) for i, head in enumerate(self.head)], dim=0), dim=0)
+            return torch.cat([xs0, xs1], dim=1)
+
+        head0 = self.head[0](xs0)
+        head1 = self.head[1](xs1)
+
+        return torch.mean(torch.stack([head0, head1], dim=0), dim=0)
 
     def forward(self, x):
-        xs = self.forward_features(x)
-        x = self.forward_head(xs)
+        xs0, xs1 = self.forward_features(x)
+        x = self.process_heads(xs0, xs1)
         return x
 
 
