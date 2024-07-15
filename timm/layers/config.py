@@ -128,12 +128,13 @@ class set_layer_config:
 
 
 def use_fused_attn(experimental: bool = False) -> bool:
-    # NOTE: ONNX export cannot handle F.scaled_dot_product_attention as of pytorch 2.0
-    if not _HAS_FUSED_ATTN or _EXPORTABLE:
-        return False
-    if experimental:
-        return _USE_FUSED_ATTN > 1
-    return _USE_FUSED_ATTN > 0
+    return False
+    # # NOTE: ONNX export cannot handle F.scaled_dot_product_attention as of pytorch 2.0
+    # if not _HAS_FUSED_ATTN or _EXPORTABLE:
+    #     return False
+    # if experimental:
+    #     return _USE_FUSED_ATTN > 1
+    # return _USE_FUSED_ATTN > 0
 
 
 def set_fused_attn(enable: bool = True, experimental: bool = False):
