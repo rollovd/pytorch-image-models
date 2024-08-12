@@ -454,6 +454,7 @@ class CrossVit(nn.Module):
                     orientation_embed = torch.zeros(B, 1, x_.size(-1), device=x_.device)
                 else:
                     orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
+
                 x_ = torch.cat((x_, orientation_embed), dim=1)
 
             x_ = self.pos_drop(x_)
