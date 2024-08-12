@@ -433,6 +433,8 @@ class CrossVit(nn.Module):
         xs = []
 
         is_horizontal = kwargs.get('is_horizontal', None)
+        if is_horizontal is not None:
+            is_horizontal = is_horizontal.repeat_interleave(3)
 
         for i, patch_embed in enumerate(self.patch_embed):
             x_ = x
@@ -447,7 +449,7 @@ class CrossVit(nn.Module):
 
             if is_horizontal is not None:
                 orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
-                is_horizontal = is_horizontal.repeat_interleave(3)
+
                 print(orientation_embed.shape, is_horizontal.shape)
                 orientation_embed[~is_horizontal] = 0
                 x_ = torch.cat((x_, orientation_embed), dim=1)
