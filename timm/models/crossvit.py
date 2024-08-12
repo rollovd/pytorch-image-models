@@ -317,7 +317,6 @@ class CrossVit(nn.Module):
             drop_path_rate=0.,
             norm_layer=partial(nn.LayerNorm, eps=1e-6),
             global_pool='token',
-            add_orientation_embed=False
     ):
         super().__init__()
         assert global_pool in ('token', 'avg')
@@ -333,7 +332,6 @@ class CrossVit(nn.Module):
         self.embed_dim = embed_dim
         self.num_features = self.head_hidden_size = sum(embed_dim)
         self.patch_embed = nn.ModuleList()
-        self.add_orientation_embed = add_orientation_embed
 
         # hard-coded for torch jit script
         for i in range(self.num_branches):
@@ -430,14 +428,11 @@ class CrossVit(nn.Module):
             for i in range(self.num_branches)
         ])
 
-    def forward_features(self, x) -> List[torch.Tensor]:
+    def forward_features(self, x, **kwargs) -> List[torch.Tensor]:
         B = x.shape[0]
         xs = []
 
-        is_horizontal = None
-        if self.add_orientation_embed:
-            is_horizontal = x.shape[3] > x.shape[2]
-            print(is_horizontal)
+        is_horizontal = kwargs.get('is_horizontal', None)
 
         for i, patch_embed in enumerate(self.patch_embed):
             x_ = x
@@ -450,7 +445,7 @@ class CrossVit(nn.Module):
             pos_embed = self.pos_embed_0 if i == 0 else self.pos_embed_1  # hard-coded for torch jit script
             x_ = x_ + pos_embed
 
-            if self.add_orientation_embed:
+            if is_horizontal is not None:
                 if is_horizontal:
                     orientation_embed = torch.zeros(B, 1, x_.size(-1), device=x_.device)
                 else:
