@@ -436,7 +436,7 @@ class CrossVit(nn.Module):
 
         is_horizontal = None
         if self.add_orientation_embed:
-            is_horizontal = x.shape[2] > x.shape[1]
+            is_horizontal = x.shape[3] > x.shape[2]
 
         for i, patch_embed in enumerate(self.patch_embed):
             x_ = x
