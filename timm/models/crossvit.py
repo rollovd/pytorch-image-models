@@ -464,8 +464,6 @@ class CrossVit(nn.Module):
             cls_tokens = cls_tokens.expand(B, -1, -1)
             x_ = torch.cat((cls_tokens, x_), dim=1)
             pos_embed = self.pos_embed_0 if i == 0 else self.pos_embed_1  # hard-coded for torch jit script
-
-            print(x_.shape, pos_embed.shape)
             x_ = x_ + pos_embed
 
             if is_horizontal is not None:
@@ -474,13 +472,17 @@ class CrossVit(nn.Module):
                 x_ = torch.cat((x_, orientation_embed), dim=1)
 
             if self.num_squares_for_positional_embedding is not None:
-                branch_positional_embedding_for_squares = getattr(self, f'pos_embed_for_square_{i}')
-                # print(branch_positional_embedding_for_squares.shape)
-                branch_positional_embedding_for_squares = branch_positional_embedding_for_squares.repeat(
-                    B // self.num_squares_for_positional_embedding, 1, 1)
-                # print(branch_positional_embedding_for_squares.shape)
-                # print(x_.shape)
-                x_ = x_ + branch_positional_embedding_for_squares
+                pos_embed = getattr(self, f'pos_embed_for_square_{i}')
+
+                num_images_per_group = B // self.num_squares_for_positional_embedding
+                x_reshaped = x_.view(
+                    num_images_per_group,
+                    self.num_squares_for_positional_embedding,
+                    x_.size(-2),
+                    x_.size(-1)
+                )
+                x_reshaped = x_reshaped + pos_embed[None]
+                x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
 
             x_ = self.pos_drop(x_)
             xs.append(x_)
