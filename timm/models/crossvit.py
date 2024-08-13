@@ -392,6 +392,17 @@ class CrossVit(nn.Module):
 
         self.apply(self._init_weights)
 
+    def cosine_positional_embedding(self, num_squares, num_patches, embed_dim):
+        pos_embed = torch.zeros(num_squares, 2 + num_patches, embed_dim)
+        for pos in range(2 + num_patches):
+            for i in range(embed_dim):
+                div_term = 10000 ** (2 * (i // 2) / embed_dim)
+                if i % 2 == 0:
+                    pos_embed[:, pos, i] = torch.cos(pos / div_term)
+                else:
+                    pos_embed[:, pos, i] = torch.sin(pos / div_term)
+        return pos_embed
+
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=.02)
@@ -453,6 +464,8 @@ class CrossVit(nn.Module):
             cls_tokens = cls_tokens.expand(B, -1, -1)
             x_ = torch.cat((cls_tokens, x_), dim=1)
             pos_embed = self.pos_embed_0 if i == 0 else self.pos_embed_1  # hard-coded for torch jit script
+
+            print(x_.shape, pos_embed.shape)
             x_ = x_ + pos_embed
 
             if is_horizontal is not None:
