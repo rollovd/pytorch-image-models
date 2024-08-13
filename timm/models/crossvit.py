@@ -463,7 +463,9 @@ class CrossVit(nn.Module):
             if self.num_squares_for_positional_embedding is not None:
                 branch_positional_embedding_for_squares = getattr(self, f'pos_embed_for_square_{i}')
                 print(branch_positional_embedding_for_squares.shape)
-                branch_positional_embedding_for_squares = branch_positional_embedding_for_squares.repeat(B, 1, 1)
+                branch_positional_embedding_for_squares = branch_positional_embedding_for_squares.repeat(1, 1, 1)
+                print(branch_positional_embedding_for_squares[0] == branch_positional_embedding_for_squares[1])
+                print(branch_positional_embedding_for_squares[0] == branch_positional_embedding_for_squares[3])
                 print(branch_positional_embedding_for_squares.shape)
                 print(x_.shape)
                 x_ = x_ + branch_positional_embedding_for_squares
