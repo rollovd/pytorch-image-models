@@ -387,6 +387,8 @@ class CrossVit(nn.Module):
         for i in range(self.num_branches):
             trunc_normal_(getattr(self, f'pos_embed_{i}'), std=.02)
             trunc_normal_(getattr(self, f'cls_token_{i}'), std=.02)
+            if self.num_squares_for_positional_embedding is not None:
+                trunc_normal_(getattr(self, f'pos_embed_for_square_{i}'), std=.02)
 
         self.apply(self._init_weights)
 
