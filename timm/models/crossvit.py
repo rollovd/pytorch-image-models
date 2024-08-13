@@ -484,6 +484,10 @@ class CrossVit(nn.Module):
                 x_reshaped = x_reshaped + pos_embed[None]
                 x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
                 print(i, pos_embed.mean(dim=[1, 2]))
+                if pos_embed.grad is not None:
+                    print(f'Gradient for pos_embed at branch {i}:', pos_embed.grad)
+                else:
+                    print(f'No gradient for pos_embed at branch {i}')
 
             x_ = self.pos_drop(x_)
             xs.append(x_)
