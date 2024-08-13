@@ -337,7 +337,7 @@ class CrossVit(nn.Module):
         if self.num_squares_for_positional_embedding is not None:
             for i in range(self.num_branches):
                 setattr(self, f'pos_embed_for_square_{i}', nn.Parameter(torch.zeros(
-                    self.num_squares_for_positional_embedding, 2 + num_patches[i], embed_dim[i])))
+                    self.num_squares_for_positional_embedding, 2 + num_patches[i], embed_dim[i]), requires_grad=True))
 
         # hard-coded for torch jit script
         for i in range(self.num_branches):
