@@ -458,7 +458,7 @@ class CrossVit(nn.Module):
                 orientation_embed[~is_horizontal] = 0
                 x_ = torch.cat((x_, orientation_embed), dim=1)
 
-            if self.num_squares_for_positional_embedding:
+            if self.num_squares_for_positional_embedding is not None:
                 branch_positional_embedding_for_squares = getattr(self, f'pos_embed_for_square_{i}')
                 branch_positional_embedding_for_squares = branch_positional_embedding_for_squares.repeat(B, 1, 1)
                 x_ = x_ + branch_positional_embedding_for_squares
