@@ -336,7 +336,7 @@ class CrossVit(nn.Module):
         self.num_squares_for_positional_embedding = num_squares_for_positional_embedding
         if self.num_squares_for_positional_embedding is not None:
             for i in range(self.num_branches):
-                setattr(self, f'pos_embed_for_square_{i}', nn.Parameter(torch.zeros(
+                setattr(self, f'pos_embed_for_squares_branch_{i}', nn.Parameter(torch.zeros(
                     self.num_squares_for_positional_embedding, 2 + num_patches[i], embed_dim[i]), requires_grad=True))
 
         # hard-coded for torch jit script
@@ -388,7 +388,7 @@ class CrossVit(nn.Module):
             trunc_normal_(getattr(self, f'pos_embed_{i}'), std=.02)
             trunc_normal_(getattr(self, f'cls_token_{i}'), std=.02)
             if self.num_squares_for_positional_embedding is not None:
-                trunc_normal_(getattr(self, f'pos_embed_for_square_{i}'), std=.02)
+                trunc_normal_(getattr(self, f'pos_embed_for_squares_branch_{i}'), std=.02)
 
         self.apply(self._init_weights)
 
@@ -472,7 +472,7 @@ class CrossVit(nn.Module):
                 x_ = torch.cat((x_, orientation_embed), dim=1)
 
             if self.num_squares_for_positional_embedding is not None:
-                pos_embed_for_square = getattr(self, f'pos_embed_for_square_{i}')
+                pos_embed_for_squares = getattr(self, f'pos_embed_for_squares_branch_{i}')
 
                 num_images_per_group = B // self.num_squares_for_positional_embedding
                 x_reshaped = x_.view(
@@ -481,7 +481,7 @@ class CrossVit(nn.Module):
                     x_.size(-2),
                     x_.size(-1)
                 )
-                x_reshaped = x_reshaped + pos_embed_for_square[None]
+                x_reshaped = x_reshaped + pos_embed_for_squares[None]
                 x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
 
             x_ = self.pos_drop(x_)
