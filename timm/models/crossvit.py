@@ -489,6 +489,11 @@ class CrossVit(nn.Module):
                 else:
                     print(f'No gradient for pos_embed at branch {i}')
 
+                if x_.grad is not None:
+                    print(f'Gradient for x_ at branch {i}:', x_.grad)
+                else:
+                    print(f'No gradient for x_ at branch {i}')
+
             x_ = self.pos_drop(x_)
             xs.append(x_)
 
