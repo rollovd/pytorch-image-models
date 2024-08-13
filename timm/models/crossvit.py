@@ -472,7 +472,7 @@ class CrossVit(nn.Module):
                 x_ = torch.cat((x_, orientation_embed), dim=1)
 
             if self.num_squares_for_positional_embedding is not None:
-                pos_embed = getattr(self, f'pos_embed_for_square_{i}')
+                pos_embed_for_square = getattr(self, f'pos_embed_for_square_{i}')
 
                 num_images_per_group = B // self.num_squares_for_positional_embedding
                 x_reshaped = x_.view(
@@ -481,11 +481,11 @@ class CrossVit(nn.Module):
                     x_.size(-2),
                     x_.size(-1)
                 )
-                x_reshaped = x_reshaped + pos_embed[None]
+                x_reshaped = x_reshaped + pos_embed_for_square[None]
                 x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
-                print(i, pos_embed.mean(dim=[1, 2]))
+                print(i, pos_embed_for_square.mean(dim=[1, 2]))
                 if pos_embed.grad is not None:
-                    print(f'Gradient for pos_embed at branch {i}:', pos_embed.grad)
+                    print(f'Gradient for pos_embed at branch {i}:', pos_embed_for_square.grad)
                 else:
                     print(f'No gradient for pos_embed at branch {i}')
 
