@@ -317,6 +317,7 @@ class CrossVit(nn.Module):
             drop_path_rate=0.,
             norm_layer=partial(nn.LayerNorm, eps=1e-6),
             global_pool='token',
+            num_squares_for_positional_embedding=None
     ):
         super().__init__()
         assert global_pool in ('token', 'avg')
@@ -332,6 +333,11 @@ class CrossVit(nn.Module):
         self.embed_dim = embed_dim
         self.num_features = self.head_hidden_size = sum(embed_dim)
         self.patch_embed = nn.ModuleList()
+        self.num_squares_for_positional_embedding = num_squares_for_positional_embedding
+        if self.num_squares_for_positional_embedding is not None:
+            for i in range(self.num_branches):
+                setattr(self, f'pos_embed_for_square_{i}', nn.Parameter(torch.zeros(
+                    self.num_squares_for_positional_embedding, 2 + num_patches[i], embed_dim[i])))
 
         # hard-coded for torch jit script
         for i in range(self.num_branches):
@@ -451,6 +457,11 @@ class CrossVit(nn.Module):
                 orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
                 orientation_embed[~is_horizontal] = 0
                 x_ = torch.cat((x_, orientation_embed), dim=1)
+
+            if self.num_squares_for_positional_embedding:
+                branch_positional_embedding_for_squares = getattr(self, f'pos_embed_for_square_{i}')
+                branch_positional_embedding_for_squares = branch_positional_embedding_for_squares.repeat(B, 1, 1)
+                x_ = x_ + branch_positional_embedding_for_squares
 
             x_ = self.pos_drop(x_)
             xs.append(x_)
