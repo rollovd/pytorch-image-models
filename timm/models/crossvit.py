@@ -317,7 +317,7 @@ class CrossVit(nn.Module):
             drop_path_rate=0.,
             norm_layer=partial(nn.LayerNorm, eps=1e-6),
             global_pool='token',
-            num_squares_for_positional_embedding=None
+            num_squares_for_positional_embedding=3 # None
     ):
         super().__init__()
         assert global_pool in ('token', 'avg')
@@ -447,15 +447,66 @@ class CrossVit(nn.Module):
             for i in range(self.num_branches)
         ])
 
-    def forward_features(self, x, is_horizontal=None) -> List[torch.Tensor]:
+    # def forward_features(self, x, is_horizontal=None) -> List[torch.Tensor]:
+    #     B = x.shape[0]
+    #     xs = []
+    #
+    #     if is_horizontal is not None:
+    #         # is_horizontal = is_horizontal.repeat_interleave(3)
+    #         is_horizontal = is_horizontal.view(-1, 1)
+    #         is_horizontal = is_horizontal.expand(-1, 3)
+    #         is_horizontal = is_horizontal.flatten()
+    #
+    #     for i, patch_embed in enumerate(self.patch_embed):
+    #         x_ = x
+    #         ss = self.img_size_scaled[i]
+    #         x_ = scale_image(x_, ss, self.crop_scale)
+    #         x_ = patch_embed(x_) # batch_size x num_patches x emb_dim
+    #         cls_tokens = self.cls_token_0 if i == 0 else self.cls_token_1  # hard-coded for torch jit script
+    #         cls_tokens = cls_tokens.expand(B, -1, -1)
+    #         x_ = torch.cat((cls_tokens, x_), dim=1)
+    #         pos_embed = self.pos_embed_0 if i == 0 else self.pos_embed_1  # hard-coded for torch jit script
+    #         x_ = x_ + pos_embed
+    #
+    #         if is_horizontal is not None:
+    #             orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
+    #             orientation_embed[~is_horizontal] = 0
+    #             # for i in range(len(is_horizontal)):
+    #             #     if not is_horizontal[i]:
+    #             #         orientation_embed[i] = 0
+    #
+    #             x_ = torch.cat((x_, orientation_embed), dim=1)
+    #
+    #         if self.num_squares_for_positional_embedding is not None:
+    #             pos_embed_for_squares = self.pos_embed_for_squares_branch_0 if i == 0 else self.pos_embed_for_squares_branch_1
+    #
+    #             num_images_per_group = B // self.num_squares_for_positional_embedding
+    #             x_reshaped = x_.view(
+    #                 num_images_per_group,
+    #                 self.num_squares_for_positional_embedding,
+    #                 x_.size(-2),
+    #                 x_.size(-1)
+    #             )
+    #             x_reshaped = x_reshaped + pos_embed_for_squares[None]
+    #             x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
+    #
+    #         x_ = self.pos_drop(x_)
+    #         xs.append(x_)
+    #
+    #     for i, blk in enumerate(self.blocks):
+    #         xs = blk(xs)
+    #
+    #     # NOTE: was before branch token section, move to here to assure all branch token are before layer norm
+    #     # xs = [norm(xs[i]) for i, norm in enumerate(self.norm)]
+    #
+    #     xs0 = self.norm[0](xs[0])
+    #     xs1 = self.norm[1](xs[1])
+    #
+    #     return xs0, xs1
+
+    def forward_features(self, x) -> List[torch.Tensor]:
         B = x.shape[0]
         xs = []
-
-        # if is_horizontal is not None:
-        #     # is_horizontal = is_horizontal.repeat_interleave(3)
-        #     is_horizontal = is_horizontal.view(-1, 1)
-        #     is_horizontal = is_horizontal.expand(-1, 3)
-        #     is_horizontal = is_horizontal.flatten()
 
         for i, patch_embed in enumerate(self.patch_embed):
             x_ = x
@@ -468,30 +519,8 @@ class CrossVit(nn.Module):
             pos_embed = self.pos_embed_0 if i == 0 else self.pos_embed_1  # hard-coded for torch jit script
             x_ = x_ + pos_embed
 
-            # if is_horizontal is not None:
-            #     orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
-            #     orientation_embed[~is_horizontal] = 0
-            #     # for i in range(len(is_horizontal)):
-            #     #     if not is_horizontal[i]:
-            #     #         orientation_embed[i] = 0
-            #
-            #     x_ = torch.cat((x_, orientation_embed), dim=1)
-
-            # if self.num_squares_for_positional_embedding is not None:
-            #     pos_embed_for_squares = self.pos_embed_for_squares_branch_0 if i == 0 else self.pos_embed_for_squares_branch_1
-            #
-            #     num_images_per_group = B // self.num_squares_for_positional_embedding
-            #     x_reshaped = x_.view(
-            #         num_images_per_group,
-            #         self.num_squares_for_positional_embedding,
-            #         x_.size(-2),
-            #         x_.size(-1)
-            #     )
-            #     x_reshaped = x_reshaped + pos_embed_for_squares[None]
-            #     x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
-            #
-            # x_ = self.pos_drop(x_)
-            # xs.append(x_)
+            x_ = self.pos_drop(x_)
+            xs.append(x_)
 
         for i, blk in enumerate(self.blocks):
             xs = blk(xs)
@@ -523,8 +552,13 @@ class CrossVit(nn.Module):
 
         return torch.mean(torch.stack([head0, head1], dim=0), dim=0)
 
-    def forward(self, x, is_horizontal=None):
-        xs0, xs1 = self.forward_features(x, is_horizontal=is_horizontal)
+    # def forward(self, x, is_horizontal=None):
+    #     xs0, xs1 = self.forward_features(x, is_horizontal=is_horizontal)
+    #     x = self.process_heads(xs0, xs1)
+    #     return x
+
+    def forward(self, x):
+        xs0, xs1 = self.forward_features(x)
         x = self.process_heads(xs0, xs1)
         return x
 
