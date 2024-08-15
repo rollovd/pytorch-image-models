@@ -447,11 +447,10 @@ class CrossVit(nn.Module):
             for i in range(self.num_branches)
         ])
 
-    def forward_features(self, x, **kwargs) -> List[torch.Tensor]:
+    def forward_features(self, x, is_horizontal=None) -> List[torch.Tensor]:
         B = x.shape[0]
         xs = []
 
-        is_horizontal = kwargs.get('is_horizontal', None)
         if is_horizontal is not None:
             is_horizontal = is_horizontal.repeat_interleave(3)
 
