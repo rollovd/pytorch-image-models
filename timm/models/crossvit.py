@@ -334,10 +334,10 @@ class CrossVit(nn.Module):
         self.num_features = self.head_hidden_size = sum(embed_dim)
         self.patch_embed = nn.ModuleList()
         self.num_squares_for_positional_embedding = num_squares_for_positional_embedding
-        if self.num_squares_for_positional_embedding is not None:
-            for i in range(self.num_branches):
-                setattr(self, f'pos_embed_for_squares_branch_{i}', nn.Parameter(torch.zeros(
-                    self.num_squares_for_positional_embedding, 2 + num_patches[i], embed_dim[i]), requires_grad=True))
+        # if self.num_squares_for_positional_embedding is not None:
+        #     for i in range(self.num_branches):
+        #         setattr(self, f'pos_embed_for_squares_branch_{i}', nn.Parameter(torch.zeros(
+        #             self.num_squares_for_positional_embedding, 2 + num_patches[i], embed_dim[i]), requires_grad=True))
 
         # hard-coded for torch jit script
         for i in range(self.num_branches):
@@ -387,8 +387,8 @@ class CrossVit(nn.Module):
         for i in range(self.num_branches):
             trunc_normal_(getattr(self, f'pos_embed_{i}'), std=.02)
             trunc_normal_(getattr(self, f'cls_token_{i}'), std=.02)
-            if self.num_squares_for_positional_embedding is not None:
-                trunc_normal_(getattr(self, f'pos_embed_for_squares_branch_{i}'), std=.02)
+            # if self.num_squares_for_positional_embedding is not None:
+            #     trunc_normal_(getattr(self, f'pos_embed_for_squares_branch_{i}'), std=.02)
 
         self.apply(self._init_weights)
 
@@ -451,11 +451,11 @@ class CrossVit(nn.Module):
         B = x.shape[0]
         xs = []
 
-        if is_horizontal is not None:
-            # is_horizontal = is_horizontal.repeat_interleave(3)
-            is_horizontal = is_horizontal.view(-1, 1)
-            is_horizontal = is_horizontal.expand(-1, 3)
-            is_horizontal = is_horizontal.flatten()
+        # if is_horizontal is not None:
+        #     # is_horizontal = is_horizontal.repeat_interleave(3)
+        #     is_horizontal = is_horizontal.view(-1, 1)
+        #     is_horizontal = is_horizontal.expand(-1, 3)
+        #     is_horizontal = is_horizontal.flatten()
 
         for i, patch_embed in enumerate(self.patch_embed):
             x_ = x
@@ -468,30 +468,30 @@ class CrossVit(nn.Module):
             pos_embed = self.pos_embed_0 if i == 0 else self.pos_embed_1  # hard-coded for torch jit script
             x_ = x_ + pos_embed
 
-            if is_horizontal is not None:
-                orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
-                orientation_embed[~is_horizontal] = 0
-                # for i in range(len(is_horizontal)):
-                #     if not is_horizontal[i]:
-                #         orientation_embed[i] = 0
+            # if is_horizontal is not None:
+            #     orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
+            #     orientation_embed[~is_horizontal] = 0
+            #     # for i in range(len(is_horizontal)):
+            #     #     if not is_horizontal[i]:
+            #     #         orientation_embed[i] = 0
+            #
+            #     x_ = torch.cat((x_, orientation_embed), dim=1)
 
-                x_ = torch.cat((x_, orientation_embed), dim=1)
-
-            if self.num_squares_for_positional_embedding is not None:
-                pos_embed_for_squares = self.pos_embed_for_squares_branch_0 if i == 0 else self.pos_embed_for_squares_branch_1
-
-                num_images_per_group = B // self.num_squares_for_positional_embedding
-                x_reshaped = x_.view(
-                    num_images_per_group,
-                    self.num_squares_for_positional_embedding,
-                    x_.size(-2),
-                    x_.size(-1)
-                )
-                x_reshaped = x_reshaped + pos_embed_for_squares[None]
-                x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
-
-            x_ = self.pos_drop(x_)
-            xs.append(x_)
+            # if self.num_squares_for_positional_embedding is not None:
+            #     pos_embed_for_squares = self.pos_embed_for_squares_branch_0 if i == 0 else self.pos_embed_for_squares_branch_1
+            #
+            #     num_images_per_group = B // self.num_squares_for_positional_embedding
+            #     x_reshaped = x_.view(
+            #         num_images_per_group,
+            #         self.num_squares_for_positional_embedding,
+            #         x_.size(-2),
+            #         x_.size(-1)
+            #     )
+            #     x_reshaped = x_reshaped + pos_embed_for_squares[None]
+            #     x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
+            #
+            # x_ = self.pos_drop(x_)
+            # xs.append(x_)
 
         for i, blk in enumerate(self.blocks):
             xs = blk(xs)
