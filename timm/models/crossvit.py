@@ -467,10 +467,10 @@ class CrossVit(nn.Module):
 
             if is_horizontal is not None:
                 orientation_embed = torch.ones(B, 1, x_.size(-1), device=x_.device)
-                # orientation_embed[~is_horizontal] = 0
-                for i in range(len(is_horizontal)):
-                    if not is_horizontal[i]:
-                        orientation_embed[i] = 0
+                orientation_embed[~is_horizontal] = 0
+                # for i in range(len(is_horizontal)):
+                #     if not is_horizontal[i]:
+                #         orientation_embed[i] = 0
 
                 x_ = torch.cat((x_, orientation_embed), dim=1)
 
@@ -484,8 +484,7 @@ class CrossVit(nn.Module):
                     x_.size(-2),
                     x_.size(-1)
                 )
-                # x_reshaped = x_reshaped + pos_embed_for_squares[None]
-                x_reshaped = x_reshaped + pos_embed_for_squares.unsqueeze(0)
+                x_reshaped = x_reshaped + pos_embed_for_squares[None]
                 x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
 
             x_ = self.pos_drop(x_)
