@@ -538,6 +538,7 @@ def _create_crossvit(variant, pretrained=False, **kwargs):
             else:
                 new_key = key
             new_state_dict[new_key] = state_dict[key]
+
         return new_state_dict
 
     return build_model_with_cfg(
