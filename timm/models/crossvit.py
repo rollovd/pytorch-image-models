@@ -484,7 +484,8 @@ class CrossVit(nn.Module):
                     x_.size(-2),
                     x_.size(-1)
                 )
-                x_reshaped = x_reshaped + pos_embed_for_squares[None]
+                # x_reshaped = x_reshaped + pos_embed_for_squares[None]
+                x_reshaped = x_reshaped + pos_embed_for_squares.unsqueeze(0)
                 x_ = x_reshaped.view(B, x_.size(-2), x_.size(-1))
 
             x_ = self.pos_drop(x_)
