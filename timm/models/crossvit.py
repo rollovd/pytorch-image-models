@@ -453,7 +453,9 @@ class CrossVit(nn.Module):
 
         if is_horizontal is not None:
             # is_horizontal = is_horizontal.repeat_interleave(3)
-            is_horizontal = torch.stack([is_horizontal[0].expand(3), is_horizontal[1].expand(3)]).flatten()
+            is_horizontal = is_horizontal.view(-1, 1)
+            is_horizontal = is_horizontal.expand(-1, 3)
+            is_horizontal = is_horizontal.flatten()
 
         for i, patch_embed in enumerate(self.patch_embed):
             x_ = x
