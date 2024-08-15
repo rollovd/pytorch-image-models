@@ -471,7 +471,7 @@ class CrossVit(nn.Module):
                 x_ = torch.cat((x_, orientation_embed), dim=1)
 
             if self.num_squares_for_positional_embedding is not None:
-                pos_embed_for_squares = getattr(self, f'pos_embed_for_squares_branch_{i}')
+                pos_embed_for_squares = self.pos_embed_for_squares_branch_0 if i == 0 else self.pos_embed_for_squares_branch_1
 
                 num_images_per_group = B // self.num_squares_for_positional_embedding
                 x_reshaped = x_.view(
