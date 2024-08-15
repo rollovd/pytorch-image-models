@@ -516,8 +516,8 @@ class CrossVit(nn.Module):
 
         return torch.mean(torch.stack([head0, head1], dim=0), dim=0)
 
-    def forward(self, x, **kwargs):
-        xs0, xs1 = self.forward_features(x, **kwargs)
+    def forward(self, x, is_horizontal=None):
+        xs0, xs1 = self.forward_features(x, is_horizontal=is_horizontal)
         x = self.process_heads(xs0, xs1)
         return x
 
