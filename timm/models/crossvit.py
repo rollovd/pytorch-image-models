@@ -457,7 +457,7 @@ class CrossVit(nn.Module):
         for i, (patch_embed, input_img) in enumerate(zip(self.patch_embed, [img, face])):
             x_ = input_img
             ss = self.img_size_scaled[i]
-            x_ = self.scale_image(x_, ss, self.crop_scale)
+            x_ = scale_image(x_, ss, self.crop_scale)
             x_ = patch_embed(x_)  # batch_size x num_patches x emb_dim
             cls_tokens = self.cls_token_0 if i == 0 else self.cls_token_1
             cls_tokens = cls_tokens.expand(B, -1, -1)
