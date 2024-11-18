@@ -535,7 +535,6 @@ def _cfg(url='', **kwargs):
         **kwargs
     }
 
-
 default_cfgs = generate_default_cfgs({
     'crossvit_15_240.in1k': _cfg(hf_hub_id='timm/'),
     'crossvit_15_dagger_240.in1k': _cfg(
